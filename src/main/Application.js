@@ -13,7 +13,8 @@ import {
 import { checkIsNeedRun } from '@shared/utils'
 import {
   convertTrackerDataToComma,
-  fetchBtTrackerFromSource
+  fetchBtTrackerFromSource,
+  reduceTrackerString
 } from '@shared/utils/tracker'
 import logger from './core/Logger'
 import ConfigManager from './core/ConfigManager'
@@ -41,7 +42,7 @@ export default class Application extends EventEmitter {
   }
 
   init () {
-    this.configManager = new ConfigManager()
+    this.configManager = this.initConfigManager()
 
     this.locale = this.configManager.getLocale()
     this.localeManager = setupLocaleManager(this.locale)
@@ -82,6 +83,22 @@ export default class Application extends EventEmitter {
     this.handleIpcInvokes()
 
     this.emit('application:initialized')
+  }
+
+  initConfigManager () {
+    this.configListeners = {}
+    return new ConfigManager()
+  }
+
+  offConfigListeners () {
+    try {
+      Object.keys(this.configListeners).forEach((key) => {
+        this.configListeners[key]()
+      })
+    } catch (e) {
+      logger.warn('[Motrix] offConfigListeners===>', e)
+    }
+    this.configListeners = {}
   }
 
   setupApplicationMenu () {
@@ -172,7 +189,9 @@ export default class Application extends EventEmitter {
   }
 
   watchTraySpeedometerEnabledChange () {
-    this.configManager.userConfig.onDidChange('tray-speedometer', async (newValue, oldValue) => {
+    const { userConfig } = this.configManager
+    const key = 'tray-speedometer'
+    this.configListeners[key] = userConfig.onDidChange('tray-speedometer', async (newValue, oldValue) => {
       logger.info('[Motrix] detected tray speedometer value change event:', newValue, oldValue)
       this.trayManager.handleSpeedometerEnableChange(newValue)
     })
@@ -230,10 +249,11 @@ export default class Application extends EventEmitter {
   }
 
   watchUPnPPortsChange () {
+    const { systemConfig } = this.configManager
     const watchKeys = ['listen-port', 'dht-listen-port']
 
     watchKeys.forEach((key) => {
-      this.configManager.systemConfig.onDidChange(key, async (newValue, oldValue) => {
+      this.configListeners[key] = systemConfig.onDidChange(key, async (newValue, oldValue) => {
         logger.info('[Motrix] detected port change event:', key, newValue, oldValue)
         const enable = this.configManager.getUserConfig('enable-upnp')
         if (!enable) {
@@ -254,7 +274,9 @@ export default class Application extends EventEmitter {
   }
 
   watchUPnPEnabledChange () {
-    this.configManager.userConfig.onDidChange('enable-upnp', async (newValue, oldValue) => {
+    const { userConfig } = this.configManager
+    const key = 'enable-upnp'
+    this.configListeners[key] = userConfig.onDidChange(key, async (newValue, oldValue) => {
       logger.info('[Motrix] detected enable-upnp value change event:', newValue, oldValue)
       if (newValue) {
         this.startUPnPMapping()
@@ -295,7 +317,8 @@ export default class Application extends EventEmitter {
           return
         }
 
-        const tracker = convertTrackerDataToComma(data)
+        let tracker = convertTrackerDataToComma(data)
+        tracker = reduceTrackerString(tracker)
         this.savePreference({
           system: {
             'bt-tracker': tracker
@@ -536,8 +559,9 @@ export default class Application extends EventEmitter {
       win.setProgressBar(0)
     })
 
-    this.updateManager.on('will-updated', (event) => {
+    this.updateManager.on('will-updated', async (event) => {
       this.windowManager.setWillQuit(true)
+      await this.stop()
     })
 
     this.updateManager.on('update-error', (event) => {
@@ -546,10 +570,25 @@ export default class Application extends EventEmitter {
     })
   }
 
-  relaunch () {
-    this.stop()
+  async relaunch () {
+    await this.stop()
     app.relaunch()
     app.exit()
+  }
+
+  async resetSession () {
+    await this.stopEngine()
+
+    app.clearRecentDocuments()
+
+    const sessionPath = this.configManager.getUserConfig('session-path') || getSessionPath()
+    setTimeout(() => {
+      unlink(sessionPath, function (err) {
+        logger.info('[Motrix] Removed the download seesion file:', err)
+      })
+
+      this.engine.start()
+    }, 3000)
   }
 
   savePreference (config = {}) {
@@ -602,22 +641,10 @@ export default class Application extends EventEmitter {
       this.hide(page)
     })
 
-    this.on('application:reset-session', () => {
-      this.engine.stop()
-
-      app.clearRecentDocuments()
-
-      const sessionPath = this.configManager.getUserConfig('session-path') || getSessionPath()
-      setTimeout(() => {
-        unlink(sessionPath, function (err) {
-          logger.info('[Motrix] Removed the download seesion file:', err)
-        })
-
-        this.engine.start()
-      }, 3000)
-    })
+    this.on('application:reset-session', () => this.resetSession())
 
     this.on('application:reset', () => {
+      this.offConfigListeners()
       this.configManager.reset()
       this.relaunch()
     })
@@ -627,7 +654,7 @@ export default class Application extends EventEmitter {
     })
 
     this.on('application:change-theme', (theme) => {
-      this.themeManager.updateAppAppearance(theme)
+      this.themeManager.updateSystemTheme(theme)
       this.sendCommandToAll('application:update-theme', { theme })
     })
 

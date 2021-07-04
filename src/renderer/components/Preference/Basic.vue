@@ -153,6 +153,13 @@
             </el-checkbox>
           </el-col>
           <el-col class="form-item-sub" :span="24">
+            <el-checkbox
+              v-model="form.btAutoDownloadContent"
+            >
+              {{ $t('preferences.bt-auto-download-content') }}
+            </el-checkbox>
+          </el-col>
+          <el-col class="form-item-sub" :span="24">
             <el-switch
               v-model="form.keepSeeding"
               :active-text="$t('preferences.keep-seeding')"
@@ -183,8 +190,6 @@
               :label="$t('preferences.seed-time')">
             </el-input-number>
           </el-col>
-          <div class="el-form-item__info" style="margin-top: 8px;">
-          </div>
         </el-form-item>
         <el-form-item
           :label="`${$t('preferences.task-manage')}: `"
@@ -271,6 +276,8 @@
       btSaveMetadata,
       dir,
       engineMaxConnectionPerServer,
+      followMetalink,
+      followTorrent,
       hideAppMenu,
       keepSeeding,
       keepWindowState,
@@ -282,6 +289,7 @@
       newTaskShowDownloading,
       noConfirmBeforeDeleteTask,
       openAtLogin,
+      pauseMetadata,
       resumeAllWhenAppLaunched,
       runMode,
       seedRatio,
@@ -292,10 +300,13 @@
     } = config
     const result = {
       autoHideWindow,
+      btAutoDownloadContent: !pauseMetadata,
       btSaveMetadata,
       continue: config.continue,
       dir,
       engineMaxConnectionPerServer,
+      followMetalink,
+      followTorrent,
       hideAppMenu,
       keepSeeding,
       keepWindowState,
@@ -393,12 +404,20 @@
             value: '5M'
           },
           {
+            label: '8 MB/s',
+            value: '8M'
+          },
+          {
             label: '10 MB/s',
             value: '10M'
           },
           {
             label: '20 MB/s',
             value: '20M'
+          },
+          {
+            label: '30 MB/s',
+            value: '30M'
           }
         ]
       },
@@ -457,14 +476,19 @@
       submitForm (formName) {
         this.$refs[formName].validate((valid) => {
           if (!valid) {
-            console.log('[Motrix] preference form valid:', valid)
+            console.error('[Motrix] preference form valid:', valid)
             return false
           }
 
-          const { runMode, openAtLogin, autoHideWindow } = this.form
+          const { btAutoDownloadContent, runMode, openAtLogin, autoHideWindow } = this.form
           const changed = diffConfig(this.formOriginal, this.form)
           const data = {
             ...changed
+          }
+          if ('btAutoDownloadContent' in changed) {
+            data.pauseMetadata = !btAutoDownloadContent
+            data.followMetalink = btAutoDownloadContent
+            data.followTorrent = btAutoDownloadContent
           }
           console.log('[Motrix] preference changed data:', data)
 
@@ -505,6 +529,3 @@
     }
   }
 </script>
-
-<style lang="scss">
-</style>

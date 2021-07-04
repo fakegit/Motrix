@@ -38,7 +38,10 @@ export default class Engine {
 
     const binPath = this.getBinPath()
     const args = this.getStartArgs()
-    this.instance = spawn(binPath, args)
+    this.instance = spawn(binPath, args, {
+      windowsHide: false,
+      stdio: is.dev() ? 'pipe' : 'ignore'
+    })
     const pid = this.instance.pid.toString()
     this.writePidFile(pidPath, pid)
 
@@ -56,11 +59,11 @@ export default class Engine {
 
     if (is.dev()) {
       this.instance.stdout.on('data', function (data) {
-        console.log('[Motrix] engine stdout===>', data.toString())
+        logger.log('[Motrix] engine stdout===>', data.toString())
       })
 
       this.instance.stderr.on('data', function (data) {
-        console.log('[Motrix] engine stderr===>', data.toString())
+        logger.log('[Motrix] engine stderr===>', data.toString())
       })
     }
   }

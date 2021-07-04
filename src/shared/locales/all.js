@@ -12,15 +12,16 @@ import eleLocaleId from 'element-ui/lib/locale/lang/id'
 import elelocaleIt from 'element-ui/lib/locale/lang/it'
 import eleLocaleJa from 'element-ui/lib/locale/lang/ja'
 import eleLocaleKo from 'element-ui/lib/locale/lang/ko'
+import eleLocaleNb from 'element-ui/lib/locale/lang/nb-NO'
 import eleLocalePl from 'element-ui/lib/locale/lang/pl'
 import eleLocalePtBR from 'element-ui/lib/locale/lang/pt-br'
 import eleLocaleRo from 'element-ui/lib/locale/lang/ro'
 import eleLocaleRu from 'element-ui/lib/locale/lang/ru-RU'
 import eleLocaleTr from 'element-ui/lib/locale/lang/tr-TR'
+import eleLocaleUk from 'element-ui/lib/locale/lang/ua'
 import eleLocaleVi from 'element-ui/lib/locale/lang/vi'
 import eleLocaleZhCN from 'element-ui/lib/locale/lang/zh-CN'
 import eleLocaleZhTW from 'element-ui/lib/locale/lang/zh-TW'
-import eleLocaleUk from 'element-ui/lib/locale/lang/ua'
 import appLocaleAr from '@shared/locales/ar'
 import appLocaleBg from '@shared/locales/bg'
 import appLocaleCa from '@shared/locales/ca'
@@ -35,15 +36,16 @@ import appLocaleId from '@shared/locales/id'
 import applocaleIt from '@shared/locales/it'
 import appLocaleJa from '@shared/locales/ja'
 import appLocaleKo from '@shared/locales/ko'
+import appLocaleNb from '@shared/locales/nb'
 import appLocalePl from '@shared/locales/pl'
 import appLocalePtBR from '@shared/locales/pt-BR'
 import appLocaleRo from '@shared/locales/ro'
 import appLocaleRu from '@shared/locales/ru'
 import appLocaleTr from '@shared/locales/tr'
+import appLocaleUk from '@shared/locales/uk'
 import appLocaleVi from '@shared/locales/vi'
 import appLocaleZhCN from '@shared/locales/zh-CN'
 import appLocaleZhTW from '@shared/locales/zh-TW'
-import appLocaleUk from '@shared/locales/uk'
 
 // Please keep the locale key in alphabetical order.
 /* eslint-disable quote-props */
@@ -52,6 +54,12 @@ const resources = {
     translation: {
       ...eleLocaleAr,
       ...appLocaleAr
+    }
+  },
+  'bg': {
+    translation: {
+      ...eleLocaleBg,
+      ...appLocaleBg
     }
   },
   'ca': {
@@ -126,6 +134,12 @@ const resources = {
       ...appLocaleKo
     }
   },
+  'nb': {
+    translation: {
+      ...eleLocaleNb,
+      ...appLocaleNb
+    }
+  },
   'pl': {
     translation: {
       ...eleLocalePl,
@@ -156,6 +170,12 @@ const resources = {
       ...appLocaleTr
     }
   },
+  'uk': {
+    translation: {
+      ...eleLocaleUk,
+      ...appLocaleUk
+    }
+  },
   'vi': {
     translation: {
       ...eleLocaleVi,
@@ -172,18 +192,6 @@ const resources = {
     translation: {
       ...eleLocaleZhTW,
       ...appLocaleZhTW
-    }
-  },
-  'uk': {
-    translation: {
-      ...eleLocaleUk,
-      ...appLocaleUk
-    }
-  },
-  'bg': {
-    translation: {
-      ...eleLocaleBg,
-      ...appLocaleBg
     }
   }
 }
